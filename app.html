@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>POS App</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        font-family: sans-serif;
+        display: flex;
+        justify-content: space-between;
+        width: 1200px;
+        height: 720px;
+        margin: auto;
+        box-sizing: border-box;
+      }
+      .main-view,
+      .products-view {
+        width: 65%;
+        padding: 20px;
+      }
+      .cart-summary {
+        width: 30%;
+        padding: 20px;
+        border-left: 2px solid #ccc;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
+      .grid {
+        display: grid;
+        gap: 20px;
+      }
+      .item {
+        width: 100px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-weight: bold;
+        text-align: center;
+        cursor: pointer;
+        padding: 5px;
+        overflow: hidden;
+        word-wrap: break-word;
+        word-break: break-word;
+        font-size: clamp(10px, 1.5vw, 14px);
+        line-height: 1.1;
+        flex-shrink: 0;
+      }
+      .cart-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        gap: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        width: 100%;
+      }
+      .cart-item .info {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .remove {
+        color: red;
+        cursor: pointer;
+        flex-shrink: 0;
+        font-weight: bold;
+      }
+      .back-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      const categories = [
+        {
+          name: "Gemüse",
+          columns: 4,
+          subcategories: [
+            {
+              name: "Salate",
+              columns: 5,
+              products: [
+                { name: "Blattsalsd", price: 0.5, color: "#FFE0B2" },
+                { name: "Feldsalat lose KG", price: 0.5, color: "#FFE0B2" },
+                {
+                  name: "SchnittSalat -lose- KG",
+                  price: 0.5,
+                  color: "#FFE0B2",
+                },
+                { name: "Romana Salat", price: 0.5, color: "#FFE0B2" },
+                { name: "", price: 0, color: "#FFF" },
+                { name: "Chicoree", price: 0.5, color: "#FFE0B2" },
+                { name: "Feldsalat Schale", price: 0.5, color: "#FFE0B2" },
+                {
+                  name: "Salat Mix/ Asia Mix Schale",
+                  price: 0.5,
+                  color: "#FFE0B2",
+                },
+                {
+                  name: "Salanova 2er-Pack Stücke",
+                  price: 0.5,
+                  color: "#FFE0B2",
+                },
+                { name: "", price: 0.5, color: "#FFE0B2" },
+                { name: "Chinakohl KG", price: 0.5, color: "#FFE0B2" },
+                { name: "Postelein", price: 0.5, color: "#FFE0B2" },
+                {
+                  name: "Salat -Asia-Mix- Schale",
+                  price: 0.5,
+                  color: "#FFE0B2",
+                },
+                {
+                  name: "Salat Multiblatt Mix Rot/Grün Stück",
+                  price: 0.5,
+                  color: "#FFE0B2",
+                },
+                { name: "", price: 0.5, color: "#FFE0B2" },
+                { name: "Chinakohl Stück", price: 0.5, color: "#FFE0B2" },
+                { name: "Radicchio", price: 0.5, color: "#FFE0B2" },
+                { name: "", price: 0.5, color: "#FFE0B2" },
+                { name: "Pack Choi Stück", price: 0.5, color: "#FFE0B2" },
+                { name: "Pak Choi KG", price: 0.5, color: "#FFE0B2" },
+                { name: "Eisbergsalst", price: 0.5, color: "#FFE0B2" },
+                { name: "", price: 0.5, color: "#FFE0B2" },
+                { name: "Rucola Schale", price: 0.5, color: "#FFE0B2" },
+                { name: "Zuckerhut Salat 1kg", price: 0.5, color: "#FFE0B2" },
+                { name: "", price: 0.5, color: "#FFE0B2" },
+                { name: "Endiviensalat", price: 0.5, color: "#FFE0B2" },
+              ],
+            },
+            {
+              name: "Blattgemüse (Mangold Spinet)",
+              columns: 2,
+              products: [
+                { name: "Mangold", price: 1.2, color: "#AED581" },
+                { name: "Spinat Btl. 250g", price: 1.2, color: "#AED581" },
+                {
+                  name: "Spinat -R- - Baby -lose- 1kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Spinat Btl. 400g", price: 1.2, color: "#AED581" },
+                {
+                  name: "Baby Spinat Schale 125g",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "Kröuter, Tomaten-pflanzen",
+              columns: 5,
+              products: [
+                { name: "Bärlauch", price: 1.2, color: "#AED581" },
+                { name: "Kräutertopf", price: 1.2, color: "#AED581" },
+                {
+                  name: "Kräuter in Kokosfasertopf",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Tomaten Pflanzen", price: 1.2, color: "#AED581" },
+                { name: "Beifuß getrocknet", price: 1.2, color: "#AED581" },
+                { name: "Petersilie", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Tomaten-pflanzen Groß", price: 1.2, color: "#AED581" },
+                { name: "Bonenkraut", price: 1.2, color: "#AED581" },
+                {
+                  name: "Kräuter Bund, verschiedene",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Kresse", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+
+                {
+                  name: "Aloe Vera Im Topf Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Dill", price: 1.2, color: "#AED581" },
+                { name: "Schnittlauch", price: 1.2, color: "#AED581" },
+                { name: "Sprossen Mix 50g", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Zitronengras Bund", price: 1.2, color: "#AED581" },
+                { name: "Kräuter Basilikum 50g", price: 1.2, color: "#AED581" },
+                { name: "Grüne Soße Mischung", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Zitronengras lose kg", price: 1.2, color: "#AED581" },
+              ],
+            },
+            {
+              name: "Paprika,Peperoni",
+              columns: 3,
+              products: [
+                { name: "Paprika gelb", price: 1.2, color: "#AED581" },
+                {
+                  name: "Paprika Spitz Rot LOSE",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Peperoni Tüte", price: 1.2, color: "#AED581" },
+                { name: "paprika grün", price: 1.2, color: "#AED581" },
+                {
+                  name: "paprika spitz Gelb/Orange Lose",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Peperoni Mix", price: 1.2, color: "#AED581" },
+                { name: "Paprika orange", price: 1.2, color: "#AED581" },
+                {
+                  name: "Paprika rot Stück (Spitz/Sweet Bite)",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Peperoni rot/gelb", price: 1.2, color: "#AED581" },
+                { name: "Paprika rot", price: 1.2, color: "#AED581" },
+                { name: "Paprika Mini Schale", price: 1.2, color: "#AED581" },
+                {
+                  name: "Peperoni Jalapenos gewogen",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Paprika Sweet Bite gepackt",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Paprika Padron zum Braten",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Paprika Mini selbst Mixen KG",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+              ],
+            },
+            {
+              name: "Pilze",
+              columns: 4,
+              products: [
+                { name: "Austernpilze", price: 1.2, color: "#AED581" },
+                { name: "Kräuter-seitlinge", price: 1.2, color: "#AED581" },
+                { name: "Pfifferlinge kg", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Champignons", price: 1.2, color: "#AED581" },
+                { name: "Edelpilze Mix", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Champignon Portebello (Groß)",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Shiitake", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Pilzkit - Limonen- sietling- Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Champignon i.d. Schale",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Pilze - Steinpilze", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Pilzkit - Kastanien- seitlingen- Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "Kohlgemüse",
+              columns: 4,
+              products: [
+                { name: "Blaukraut / Rotkohl", price: 1.2, color: "#AED581" },
+                { name: "Grünkohl", price: 1.2, color: "#AED581" },
+                { name: "Weißkraut", price: 1.2, color: "#AED581" },
+                { name: "Kohl Flower Sprout kg", price: 1.2, color: "#AED581" },
+                { name: "Blumenkohl", price: 1.2, color: "#AED581" },
+                { name: "Kohlrabi", price: 1.2, color: "#AED581" },
+                { name: "Wirsingstück", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Blumenkohl Romanesco", price: 1.2, color: "#AED581" },
+                { name: "Rosenkohl", price: 1.2, color: "#AED581" },
+                { name: "Wirsing kg", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Broccoli", price: 1.2, color: "#AED581" },
+                { name: "Spitzkohl KG", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Broccoli- Sprouting Broccoli- BUND",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Spitzkohl Stück", price: 1.2, color: "#AED581" },
+              ],
+            },
+            {
+              name: "Wurzel-gemüse",
+              columns: 6,
+              products: [
+                {
+                  name: "Frischer Ingwer Regional",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Ingwer", price: 1.2, color: "#AED581" },
+                { name: "Kurkuma", price: 1.2, color: "#AED581" },
+                { name: "Rettich schwarz", price: 1.2, color: "#AED581" },
+                {
+                  name: "Sellerieknolle mit Grün",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Spargel grün Bund", price: 1.2, color: "#AED581" },
+                { name: "Karotten gewaschen", price: 1.2, color: "#AED581" },
+                { name: "Meerrettich", price: 1.2, color: "#AED581" },
+                { name: "Radieschen Bund", price: 1.2, color: "#AED581" },
+                { name: "Rettich weiß", price: 1.2, color: "#AED581" },
+                { name: "Staudensellerie KG", price: 1.2, color: "#AED581" },
+                {
+                  name: "Spargel weiß/viol. Bund",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Karotten ungewaschen", price: 1.2, color: "#AED581" },
+                {
+                  name: "Rübchen, Steckrüben, Navet violett",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Rote Bete lose", price: 1.2, color: "#AED581" },
+                {
+                  name: "Rettich - weiß - KG 1kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Staudensellerie STÜCK", price: 1.2, color: "#AED581" },
+                { name: "Spargel grün lose", price: 1.2, color: "#AED581" },
+                {
+                  name: "Karotten - Früh - Neue Ernte",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Pastinaken", price: 1.2, color: "#AED581" },
+                { name: "Rote Bete Bund", price: 1.2, color: "#AED581" },
+                { name: "Rettich rot", price: 1.2, color: "#AED581" },
+                { name: "Sellerieknolle", price: 1.2, color: "#AED581" },
+                { name: "Spargel weiß lose", price: 1.2, color: "#AED581" },
+                { name: "Karotten Bund", price: 1.2, color: "#AED581" },
+                { name: "Topinambur", price: 1.2, color: "#AED581" },
+                { name: "Gelbe Bete kg", price: 1.2, color: "#AED581" },
+                {
+                  name: "Rettich Rose de Chine / Pink Meat",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Spargel violet lose", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Rote Bete geringelt - Chioggia -",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "Tomaten",
+              columns: 4,
+              products: [
+                { name: "Tomaten rund/ Rosé", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Tomaten Alte Sorte/ Rebellion",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Eier-Tomaten", price: 1.2, color: "#AED581" },
+                {
+                  name: "Tomate Pera i.d. Schale",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Strauch-Tomaten", price: 1.2, color: "#AED581" },
+                {
+                  name: "Tomaten Cherry Mix i.d. Schale",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Strauch Tomaten REGIONAL",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Eiertomate schwarz /gelb kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten Cherry am Strauch",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten Cherry i.d. Schale REGIONAL",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Tomaten Cocktail lose MIX kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomate REGIONAL Dattel Cherry Mix",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten Cherry Strauch REGIONAL",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten Ochsenherz REGIONAL",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten - Cherrystrauch MIX kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten Cherry Pera lose kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Tomaten - Fleischtomate-, -Mix 1kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "Kartoffeln Zwiebeln Knoblauch",
+              columns: 6,
+              products: [
+                { name: "Kartoffeln lose", price: 1.2, color: "#AED581" },
+                { name: "Kartoffeln 1,5 kg", price: 1.2, color: "#AED581" },
+                { name: "Süß-Kartoffeln", price: 1.2, color: "#AED581" },
+                { name: "Knoblauch frisch", price: 1.2, color: "#AED581" },
+                { name: "Zwiebel gelb", price: 1.2, color: "#AED581" },
+                {
+                  name: "Zwiebel - Rosa Roscoff KG",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+
+                {
+                  name: "Kartoffeln rotschalig (Rosara)",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Kartoffeln 2,5 kg", price: 1.2, color: "#AED581" },
+                {
+                  name: "Süß-Kartoffeln -violett-",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Knoblauch trocken", price: 1.2, color: "#AED581" },
+                {
+                  name: "Zwiebel gelb Neue Ernte",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Zwiebelzopf Rosa Roscoff",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+
+                { name: "Kartoffeln Früh", price: 1.2, color: "#AED581" },
+                { name: "Kartoffeln 5 kg", price: 1.2, color: "#AED581" },
+                { name: "Kartoffeln -Ofen- KG", price: 1.2, color: "#AED581" },
+                {
+                  name: "Knoblauch REGIONAL trocken",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Zwiebel Gemüse (Große)",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zwiebel Schalotten", price: 1.2, color: "#AED581" },
+
+                {
+                  name: "Kartoffeln lose AKTION",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: " ", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+
+                { name: "Knoblauch Zopf", price: 1.2, color: "#AED581" },
+                { name: "Zwiebel rot", price: 1.2, color: "#AED581" },
+                {
+                  name: "Zwiebel Schalotten gepackt",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Kartoffeln AKTION STÜCK",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Kartoffeln rot, blau", price: 1.2, color: "#AED581" },
+
+                {
+                  name: "Kartoffeln Drillinge 1kg - Tüte Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Knoblauch FRISCH Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                }, //
+                { name: "Zwiebel weiß", price: 1.2, color: "#AED581" },
+                { name: "Bund-Zwiebeln", price: 1.2, color: "#AED581" },
+                {
+                  name: '"Bamberger Hörnla" 600g SCHALE',
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: 'Kartoffeln "Bamberger Hörnla"',
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Lauch / Porree", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Vesperzwiebeln genetzt",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "Fruchtgemüse Artisch,Auber,Zucchi,Bohne",
+              columns: 5,
+              products: [
+                { name: "Artischocken Kg", price: 1.2, color: "#AED581" },
+                { name: "Erbsen, Zuckererbsen", price: 1.2, color: "#AED581" },
+                { name: "Zucchini", price: 1.2, color: "#AED581" },
+                { name: "Kürbis Hokkaido rot", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Artischocken Stück", price: 1.2, color: "#AED581" },
+                { name: "Fenchel", price: 1.2, color: "#AED581" },
+                { name: "Zucchini gelb", price: 1.2, color: "#AED581" },
+                {
+                  name: "Kürbis Spaghetti, Butternut, Muscat",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Auberginen", price: 1.2, color: "#AED581" },
+                {
+                  name: "Auberginen -Graffiti- kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zucchini - Baby -", price: 1.2, color: "#AED581" },
+                { name: "KKürbis Dolceta kg", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Busch-Bohnen", price: 1.2, color: "#AED581" },
+                {
+                  name: "Sojabohnen -Edamame-gewogen",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Zucchini -Füllen- Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zierkürbis", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Dicke Bohnen", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Zucchini rund", price: 1.2, color: "#AED581" },
+                {
+                  name: "Halloween-Kürbis Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zuckermais frisch", price: 1.2, color: "#AED581" },
+                { name: "Stangen-Bohnen", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Kürbis -Delikata- KG", price: 1.2, color: "#AED581" },
+                { name: "Zuckermais vaciim", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Chayoten grün KG", price: 1.2, color: "#AED581" },
+              ],
+            },
+            {
+              name: "Gurken",
+              columns: 2,
+              products: [
+                { name: "Gurken Land", price: 1.2, color: "#AED581" },
+                { name: "Gurken Mini", price: 1.2, color: "#AED581" },
+                { name: "Gurken Schlangen", price: 1.2, color: "#AED581" },
+                {
+                  name: "Gurken Einlegegurken kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Gurke Suyu Long Stück", price: 1.2, color: "#AED581" },
+                {
+                  name: "Gurken Schlangen 2. Wahl",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "Rhabarber",
+              products: [{ name: "Rhabarber", price: 1.2, color: "#AED581" }],
+            },
+          ],
+        },
+        {
+          name: "Obst",
+          columns: 5,
+          subcategories: [
+            {
+              name: "Äpfel",
+              columns: 3,
+              products: [
+                { name: "Äpfel regulär kg", price: 1.2, color: "#FFCDD2" },
+                { name: "Äpfel 1,5 kg", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Äpfeläpfel kleine Kaliber 'Kinderäpfel' kg ",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Äpfel Aktion KG", price: 1.2, color: "#FFCDD2" },
+                { name: "Äpfel 2 kg", price: 1.2, color: "#FFCDD2" },
+                { name: "Äpfel -Stern- Stück", price: 1.2, color: "#FFCDD2" },
+                { name: "Äpfel Neue Ernte", price: 1.2, color: "#FFCDD2" },
+              ],
+            },
+            {
+              name: "Exoten",
+              columns: 6,
+              products: [
+                { name: "Ananas", price: 1.2, color: "#FFCDD2" },
+                { name: "Kiwi", price: 1.2, color: "#FFCDD2" },
+                { name: "Felgen KG", price: 1.2, color: "#FFCDD2" },
+                { name: "Granatapfel KG", price: 1.2, color: "#FFCDD2" },
+                { name: "Papaya Stück", price: 1.2, color: "#FFCDD2" },
+                { name: "Mango Stück", price: 1.2, color: "#FFCDD2" },
+                { name: "Ananas SPEZIEL", price: 1.2, color: "#FFCDD2" },
+                { name: "Kivi GOLD", price: 1.2, color: "#FFCDD2" },
+                { name: "Feigen Stück", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Granatapfel Stück 1 St.",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Papaya Halbe", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Avokados", price: 1.2, color: "#FFCDD2" },
+                { name: "Kiwi Mini gewogen", price: 1.2, color: "#FFCDD2" },
+                { name: "Felgen Kaktus", price: 1.2, color: "#FFCDD2" },
+                { name: "Kaki Sharon KG", price: 1.2, color: "#FFCDD2" },
+                { name: "Papaya KG", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Cherimoya 1 KG", price: 1.2, color: "#FFCDD2" },
+                { name: "Kiwi Mini Schale", price: 1.2, color: "#FFCDD2" },
+                { name: "Feigen Kaktus STÜCK", price: 1.2, color: "#FFCDD2" },
+                { name: "KAki/Scharon Stück", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Pitaya Drachen frucht kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Cherimoya STÜCK", price: 1.2, color: "#FFCDD2" },
+                { name: "Litschi", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Maracuja KG", price: 1.2, color: "#FFCDD2" },
+              ],
+            },
+            {
+              name: "Steinobst",
+              columns: 4,
+              products: [
+                { name: "Aprikosen", price: 1.2, color: "#FFCDD2" },
+                { name: "Nektarin gelb", price: 1.2, color: "#FFCDD2" },
+                { name: "Pfirsiche gelb", price: 1.2, color: "#FFCDD2" },
+                { name: "Zwetschgen", price: 1.2, color: "#FFCDD2" },
+                { name: "Datteln kg", price: 1.2, color: "#FFCDD2" },
+                { name: "Nektarin weiß", price: 1.2, color: "#FFCDD2" },
+                { name: "Pfirsich weiß", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Kirsch Pflaumen Schale 400g",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Datteln am Zweig kg", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Nektarinen Flach Bergnektarine",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Pfirsich Flach (Bergfirsich)",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "KirschPflaumen -R- 200g Schale",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Kirschen", price: 1.2, color: "#FFCDD2" },
+                { name: "Pfllaumen gelb", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Aktion Pfirsich gelb Kiste",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Mispeln", price: 1.2, color: "#FFCDD2" },
+                { name: "Pflaumen rot", price: 1.2, color: "#FFCDD2" },
+              ],
+            },
+            {
+              name: "Blumen",
+              columns: 5,
+              products: [
+                { name: "Hyazinten im topf", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Blumen Sommerstrauß Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Blümen im Topf Stück", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Ökohum Universalerde 15l",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Narzissen im Topf", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Blumen Mix Sommerblumen TOPF Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Blumen Rosenstrauß Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Gemüse Pflanzen im Topf Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "bionero Blumenerde Bienenschmaus 18l",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Tulpen im Topf", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Sonnenblume Susanne Dahlie Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Tomaten Pflanzen (Laurer) Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Stiefmülterchen STÜCK", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "Tomaten pflanzen GROß", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Pflanzen -R- Peperoni scharf 1St",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Steifmültchen ab 6 Stück STÜCK",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Waldebeeren im Topf (Laurer) Stück",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+              ],
+            },
+            {
+              name: "",
+              products: [{ name: "", price: 1.2, color: "#FFCDD2" }],
+            },
+            {
+              name: "Bananen",
+
+              products: [{ name: "Bananen", price: 1.2, color: "#FFCDD2" }],
+            },
+            {
+              name: "Zitrus",
+              columns: 5,
+              products: [
+                { name: "Bitterorangen", price: 1.2, color: "#AED581" },
+                {
+                  name: "Grapefruit rose/ rot KG",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Orangen groß", price: 1.2, color: "#AED581" },
+                {
+                  name: "Orangen Tarocco (Halbblut)",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zitronen KG", price: 1.2, color: "#AED581" },
+
+                { name: "Clementinen", price: 1.2, color: "#AED581" },
+                { name: "Grapefruit Stück", price: 1.2, color: "#AED581" },
+                {
+                  name: "Orangen Navel/Navelina",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Orangen Moro (Blutorange)",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zitronen im Netz", price: 1.2, color: "#AED581" },
+
+                { name: "Clementinen Blatt", price: 1.2, color: "#AED581" },
+                {
+                  name: "Grapefruit Sweety Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Orangen Washington", price: 1.2, color: "#AED581" },
+                {
+                  name: "Orangen Blut Saft kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Limetten", price: 1.2, color: "#AED581" },
+
+                {
+                  name: "Clementinen im Karton",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Grapefruit gelb/weiß",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Orangen Saft", price: 1.2, color: "#AED581" },
+                {
+                  name: "Blut-Orangen KISTE 7kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Zitrone - Bergamotte -",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+
+                { name: "Kumquat", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Satsumas", price: 1.2, color: "#AED581" },
+                {
+                  name: "Orangen KISTE 3kg Biosybaris",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Zitrone -TIGER- kg", price: 1.2, color: "#AED581" },
+
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Mandarine", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+              ],
+            },
+            {
+              name: "Kernobst",
+              columns: 6,
+              products: [
+                { name: "Birnen AKTION", price: 1.2, color: "#AED581" },
+                {
+                  name: "Melone Cantaloup/Canari Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                {
+                  name: "Melone Piel de Sapo/Canari KG",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Trauben blau", price: 1.2, color: "#AED581" },
+                { name: "Trauben kernlos blau", price: 1.2, color: "#AED581" },
+                {
+                  name: "Regional Trauben kernlos blau",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Birnen GRÜN", price: 1.2, color: "#AED581" },
+                {
+                  name: "Melone Charentais Stück",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Melone Cantaloupe KG", price: 1.2, color: "#AED581" },
+                { name: "Trauben weiß", price: 1.2, color: "#AED581" },
+                { name: "Trauben kernlos weiß", price: 1.2, color: "#AED581" },
+                {
+                  name: "Regional Trauben kernlos weiß",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "Birnen ROT", price: 1.2, color: "#AED581" },
+                { name: "Melone Galia STÜCK", price: 1.2, color: "#AED581" },
+                { name: "Melone Charentais KG", price: 1.2, color: "#AED581" },
+                {
+                  name: "Trauben - weiß - Muscat - 2kg",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Regional Trauben blau", price: 1.2, color: "#AED581" },
+                { name: "Birnen Nashi", price: 1.2, color: "#AED581" },
+                { name: "Melone Wasser KG", price: 1.2, color: "#AED581" },
+                { name: "Melone Galia KG", price: 1.2, color: "#AED581" },
+                { name: "Trauben schwarz", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Regional Trauben weiß", price: 1.2, color: "#AED581" },
+                { name: "Quitten", price: 1.2, color: "#AED581" },
+                { name: "Mini-Wassermelone", price: 1.2, color: "#AED581" },
+                {
+                  name: "Regional Melone -Wasser- gelbfleisch.",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                { name: "Mirabellen kg", price: 1.2, color: "#AED581" },
+                { name: "", price: 1.2, color: "#AED581" },
+                {
+                  name: "Regional Melone -Wasser- rotfleischig",
+                  price: 1.2,
+                  color: "#AED581",
+                },
+              ],
+            },
+            {
+              name: "",
+              products: [{ name: "", price: 1.2, color: "#FFFFF" }],
+            },
+            {
+              name: "Baby Bananen",
+              columns: 5,
+              products: [
+                { name: "Baby Bananen", price: 1.2, color: "#FFCDD2" },
+              ],
+            },
+            {
+              name: "Bananen,Kanarische Inseln",
+              columns: 5,
+              products: [{ name: "Apfel", price: 1.2, color: "#FFCDD2" }],
+            },
+            {
+              name: "Beeren",
+              columns: 6,
+              products: [
+                {
+                  name: "Erdbeeren, gewogen 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Himbeeren, gewogen 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Brombeeren 200g", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Goldbeere Physalis/Kapstach.",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Johannisbeeren ROT 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Aroniabeeren, gewogen 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+
+                { name: "Erdbeeren 500g", price: 1.2, color: "#FFCDD2" },
+                { name: "Himbeeren 125g", price: 1.2, color: "#FFCDD2" },
+                { name: "Brombeere 125gr", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Ananaskirsche i.d.Schale 125g",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Johannisbeeren ROT 250g",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+
+                { name: "Erdbeeren 250g", price: 1.2, color: "#FFCDD2" },
+                { name: "Heidelbeeren 125g", price: 1.2, color: "#FFCDD2" },
+                { name: "Brombeere, KG", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Ananaskirschen lose 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Johannisbeeren ROT 50g",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+
+                {
+                  name: "Erdbeeren Regional 250g",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Heidelbeeren 250g", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Stachelbeeren Schale 200g",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Beere Aronia Schale", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Johannisbeeren SCHWARZ",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+
+                { name: "Erdbeeren 1kg-Kiste", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Heidelbeeren gewogen 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Stachelbeeren, gewogen 1kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Beeren Haskap Schale", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Johannisbeeren WEISS -kg-",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+              ],
+            },
+            {
+              name: "Nüsse",
+              columns: 4,
+              products: [
+                { name: "Erdnüsse i.d. Schale", price: 1.2, color: "#FFCDD2" },
+                { name: "Kastanien/Maronen", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Rapunzel Mandel-kerne kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Rapunzel Aprikosen Getrocknet kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Haselnüsse i.d Schale", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Rapunzel Cashew-kerne lose kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                {
+                  name: "Rapunzel Feigen getrocknet kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "Mandeln i,´.d Schale", price: 1.2, color: "#FFCDD2" },
+                { name: "Kokosnuss", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Walnüsse i.d schale kg",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                { name: "", price: 1.2, color: "#FFCDD2" },
+                {
+                  name: "Walnüsse 1,5 kg- kiste",
+                  price: 1.2,
+                  color: "#FFCDD2",
+                },
+              ],
+            },
+            {
+              name: "Take5Nets,Mehrwegnetze",
+              columns: 5,
+              products: [{ name: "Test", price: 1.2, color: "#FFCDD2" }],
+            },
+          ],
+        },
+        {
+          name: "Bedienung",
+
+          products: [
+            { name: "Bedienung Fleisch / Wurst", price: 2.8, color: "#FFF9C4" },
+            {
+              name: "KRÄMERS dinkel Torteletts 4er",
+              price: 1.0,
+              color: "#FFF9C4",
+            },
+            {
+              name: "PrimaVera Salamini Finocchio Stück",
+              price: 1.0,
+              color: "#FFF9C4",
+            },
+            { name: "Bedienung Brot/Backwaren", price: 2.8, color: "#FFF9C4" },
+            {
+              name: "KRÄMERS dinkel Tortenboden Stück",
+              price: 1.0,
+              color: "#FFF9C4",
+            },
+            {
+              name: "PrimaVera Salamini Milano Stück",
+              price: 1.0,
+              color: "#FFF9C4",
+            },
+            { name: "Bedienung Käse/Feinkost", price: 2.8, color: "#FFF9C4" },
+            { name: "", price: 0, color: "#FFF" },
+            {
+              name: "PrimaVera Salamini Tartufo Stück",
+              price: 1.0,
+              color: "#FFF9C4",
+            },
+          ],
+        },
+        {
+          name: "Drogerie Artickle",
+          products: [
+            { name: "Karotte", price: 0.5, color: "#FFE0B2" },
+            { name: "Rote Bete", price: 0.6, color: "#DCE775" },
+          ],
+        },
+        {
+          name: "Lebensmittel",
+          products: [
+            { name: "Karotte", price: 0.5, color: "#FFE0B2" },
+            { name: "Rote Bete", price: 0.6, color: "#DCE775" },
+          ],
+        },
+        {
+          name: "Getränke",
+          subcategories: [
+            {
+              name: "Wurzelgemüse",
+              products: [
+                { name: "Karotte", price: 0.5, color: "#FFE0B2" },
+                { name: "Rote Bete", price: 0.6, color: "#DCE775" },
+              ],
+            },
+            {
+              name: "Blattgemüse",
+              products: [
+                { name: "Salat", price: 1.2, color: "#AED581" },
+                { name: "Spinat", price: 1.0, color: "#81C784" },
+              ],
+            },
+          ],
+        },
+      ];
+
+      let view = "main";
+      let selectedCategory = null;
+      let selectedSubcategory = null;
+      let cart = [];
+
+      function render() {
+        const app = document.getElementById("app");
+        app.innerHTML = "";
+
+        if (view === "main") {
+          const mainDiv = document.createElement("div");
+          mainDiv.className = "main-view";
+
+          const heading = document.createElement("h1");
+          heading.textContent = "Wähle eine Kategorie";
+          mainDiv.appendChild(heading);
+
+          const grid = document.createElement("div");
+          grid.className = "grid";
+          grid.style.gridTemplateColumns = "repeat(3, 1fr)";
+
+          categories.forEach((cat) => {
+            const btn = document.createElement("div");
+            btn.className = "item";
+            btn.style.backgroundColor = "#E0F7FA";
+            btn.textContent = cat.name;
+            btn.onclick = () => {
+              selectedCategory = cat;
+              if (cat.subcategories) {
+                view = "subcategories";
+              } else {
+                view = "products";
+              }
+              render();
+            };
+            grid.appendChild(btn);
+          });
+
+          mainDiv.appendChild(grid);
+          app.appendChild(mainDiv);
+
+          renderCartSummary(app);
+        }
+
+        if (view === "subcategories" && selectedCategory?.subcategories) {
+          const subDiv = document.createElement("div");
+          subDiv.className = "products-view";
+
+          const heading = document.createElement("h1");
+          heading.textContent = selectedCategory.name;
+          subDiv.appendChild(heading);
+
+          const grid = document.createElement("div");
+          grid.className = "grid";
+
+          // 🟡 Установка количества колонок из selectedCategory.columns (если есть)
+          const gridColumns = selectedCategory.columns ?? 3;
+          grid.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
+
+          selectedCategory.subcategories.forEach((subcat) => {
+            const btn = document.createElement("div");
+            btn.className = "item";
+            btn.style.backgroundColor = "#FFF3E0";
+            btn.textContent = subcat.name;
+            btn.onclick = () => {
+              selectedSubcategory = subcat;
+              view = "products";
+              render();
+            };
+            grid.appendChild(btn);
+          });
+
+          subDiv.appendChild(grid);
+          app.appendChild(subDiv);
+
+          const backBtn = document.createElement("button");
+          backBtn.textContent = "Zurück";
+          backBtn.className = "back-button";
+          backBtn.onclick = () => {
+            view = "main";
+            selectedCategory = null;
+            render();
+          };
+          app.appendChild(backBtn);
+        }
+
+        if (view === "products") {
+          const productsDiv = document.createElement("div");
+          productsDiv.className = "products-view";
+
+          const heading = document.createElement("h1");
+          heading.textContent =
+            selectedSubcategory?.name || selectedCategory.name;
+          productsDiv.appendChild(heading);
+
+          const grid = document.createElement("div");
+          grid.className = "grid";
+
+          const products =
+            selectedSubcategory?.products || selectedCategory.products || [];
+
+          // 🟢 Установка количества колонок из subcategory > category > fallback
+          let gridColumns =
+            selectedSubcategory?.columns ?? selectedCategory?.columns ?? 3;
+
+          grid.style.gridTemplateColumns = `repeat(${gridColumns}, 1fr)`;
+
+          products.forEach((p) => {
+            const btn = document.createElement("div");
+            btn.className = "item";
+
+            if (!p.name || p.name.trim() === "") {
+              btn.style.visibility = "hidden";
+            } else {
+              btn.style.backgroundColor = p.color || "#f0f0f0";
+              btn.innerHTML = `${p.name}<br>€${p.price.toFixed(2)}`;
+              btn.onclick = () => {
+                cart.push(p);
+                view = "main";
+                selectedCategory = null;
+                selectedSubcategory = null;
+                render();
+              };
+            }
+
+            grid.appendChild(btn);
+          });
+
+          productsDiv.appendChild(grid);
+          app.appendChild(productsDiv);
+
+          const backBtn = document.createElement("button");
+          backBtn.textContent = "Zurück";
+          backBtn.className = "back-button";
+          backBtn.onclick = () => {
+            if (selectedSubcategory) {
+              view = "subcategories";
+              selectedSubcategory = null;
+            } else {
+              view = "main";
+              selectedCategory = null;
+            }
+            render();
+          };
+          app.appendChild(backBtn);
+        }
+      }
+
+      function renderCartSummary(app) {
+        const summary = document.createElement("div");
+        summary.className = "cart-summary";
+        const h2 = document.createElement("h2");
+        h2.textContent = "Warenkorb";
+        summary.appendChild(h2);
+
+        const cartList = document.createElement("div");
+
+        const grouped = {};
+        cart.forEach((item) => {
+          if (!grouped[item.name]) {
+            grouped[item.name] = { ...item, count: 1 };
+          } else {
+            grouped[item.name].count++;
+          }
+        });
+
+        Object.values(grouped).forEach((item) => {
+          const div = document.createElement("div");
+          div.className = "cart-item";
+
+          const info = document.createElement("span");
+          info.className = "info";
+          info.textContent = `${item.name} (x${item.count}) - €${(
+            item.price * item.count
+          ).toFixed(2)}`;
+          div.appendChild(info);
+
+          const remove = document.createElement("span");
+          remove.textContent = "✖";
+          remove.className = "remove";
+          remove.onclick = () => {
+            cart = cart.filter((i) => i.name !== item.name);
+            render();
+          };
+          div.appendChild(remove);
+
+          cartList.appendChild(div);
+        });
+
+        summary.appendChild(cartList);
+
+        const total = document.createElement("h3");
+        const totalSum = cart.reduce((sum, p) => sum + p.price, 0).toFixed(2);
+        total.textContent = `Summe: €${totalSum}`;
+        summary.appendChild(total);
+
+        app.appendChild(summary);
+      }
+
+      render();
+    </script>
+  </body>
+</html>
